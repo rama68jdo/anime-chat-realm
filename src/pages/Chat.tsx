@@ -6,6 +6,7 @@ import { Message } from "@/types/character";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Chat = () => {
   const { id } = useParams();
@@ -43,17 +44,45 @@ const Chat = () => {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response for now
-    setTimeout(() => {
+    try {
+      // Prepare the context for the character
+      const systemMessage = `You are ${character.name} from ${character.anime}. Your personality is ${character.personality}. ${character.description} Respond to the user in character.`;
+      
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: {
+          messages: [
+            { role: "system", content: systemMessage },
+            ...messages.map(msg => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            { role: "user", content: input }
+          ]
+        }
+      });
+
+      if (error) throw error;
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Hey there! This is ${character.name}. The AI integration will be implemented soon!`,
+        content: data.choices[0].message.content,
         role: "assistant",
         timestamp: Date.now(),
       };
+
       setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I apologize, but I'm having trouble responding right now. Please try again later.",
+        role: "assistant",
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
