@@ -1,8 +1,12 @@
 
 import { characters } from "@/data/characters";
 import { CharacterCard } from "@/components/CharacterCard";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen py-12 space-y-8">
       <div className="container px-4 mx-auto space-y-4 text-center">
@@ -18,6 +22,13 @@ const Index = () => {
         <p className="max-w-lg mx-auto text-lg text-muted-foreground">
           Experience unique conversations with AI-powered anime characters. Each interaction is special and memorable.
         </p>
+        <Button
+          variant="ghost"
+          className="text-muted-foreground hover:text-primary"
+          onClick={() => navigate("/admin")}
+        >
+          Admin Panel
+        </Button>
       </div>
 
       <div className="container px-4 mx-auto">
