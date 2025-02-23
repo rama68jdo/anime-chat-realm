@@ -1,7 +1,7 @@
 
 import { Character } from "@/types/character";
 
-export const characters: Character[] = [
+export let characters: Character[] = [
   {
     id: "gojo",
     name: "Gojo Satoru",
@@ -27,3 +27,8 @@ export const characters: Character[] = [
     personality: "Protective, gentle, and resilient"
   }
 ];
+
+// Add function to update characters list
+export const updateCharacters = (newCharacters: Character[]) => {
+  characters = newCharacters;
+};

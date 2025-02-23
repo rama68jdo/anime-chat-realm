@@ -3,9 +3,17 @@ import { characters } from "@/data/characters";
 import { CharacterCard } from "@/components/CharacterCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Character } from "@/types/character";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [charactersList, setCharactersList] = useState<Character[]>(characters);
+
+  // Update local state when global characters change
+  useEffect(() => {
+    setCharactersList(characters);
+  }, [characters]);
 
   return (
     <div className="min-h-screen py-12 space-y-8">
@@ -33,7 +41,7 @@ const Index = () => {
 
       <div className="container px-4 mx-auto">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {characters.map((character) => (
+          {charactersList.map((character) => (
             <CharacterCard key={character.id} character={character} />
           ))}
         </div>

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { characters } from "@/data/characters";
+import { characters, updateCharacters } from "@/data/characters";
 import { Character } from "@/types/character";
 
 const ADMIN_PASSWORD = "ramasanpi";
@@ -25,6 +25,11 @@ const Admin = () => {
   });
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const navigate = useNavigate();
+
+  // Update global characters whenever local state changes
+  useEffect(() => {
+    updateCharacters(charactersList);
+  }, [charactersList]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
