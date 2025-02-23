@@ -8,12 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { characters } from "@/data/characters";
+import { Character } from "@/types/character";
 
 const ADMIN_PASSWORD = "ramasanpi";
 
 const Admin = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  const [charactersList, setCharactersList] = useState<Character[]>(characters);
   const [newCharacter, setNewCharacter] = useState({
     name: "",
     anime: "",
@@ -21,6 +23,7 @@ const Admin = () => {
     description: "",
     personality: "",
   });
+  const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
@@ -45,8 +48,7 @@ const Admin = () => {
       id: newCharacter.name.toLowerCase().replace(/\s+/g, "-"),
     };
 
-    // Here you would typically make an API call to save the character
-    console.log("New character:", character);
+    setCharactersList((prev) => [...prev, character as Character]);
     toast.success("Character created successfully!");
     setNewCharacter({
       name: "",
@@ -55,6 +57,24 @@ const Admin = () => {
       description: "",
       personality: "",
     });
+  };
+
+  const handleEditCharacter = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCharacter) return;
+
+    setCharactersList((prev) =>
+      prev.map((char) =>
+        char.id === editingCharacter.id ? editingCharacter : char
+      )
+    );
+    setEditingCharacter(null);
+    toast.success("Character updated successfully!");
+  };
+
+  const handleDeleteCharacter = (id: string) => {
+    setCharactersList((prev) => prev.filter((char) => char.id !== id));
+    toast.success("Character deleted successfully!");
   };
 
   if (!isLoggedIn) {
@@ -107,74 +127,160 @@ const Admin = () => {
           </Button>
         </div>
 
-        <Card className="glass p-6">
-          <h2 className="text-xl font-semibold mb-4">Add New Character</h2>
-          <form onSubmit={handleCreateCharacter} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={newCharacter.name}
-                onChange={(e) =>
-                  setNewCharacter({ ...newCharacter, name: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="anime">Anime</Label>
-              <Input
-                id="anime"
-                value={newCharacter.anime}
-                onChange={(e) =>
-                  setNewCharacter({ ...newCharacter, anime: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="image">Image URL</Label>
-              <Input
-                id="image"
-                value={newCharacter.image}
-                onChange={(e) =>
-                  setNewCharacter({ ...newCharacter, image: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={newCharacter.description}
-                onChange={(e) =>
-                  setNewCharacter({
-                    ...newCharacter,
-                    description: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="personality">Personality</Label>
-              <Textarea
-                id="personality"
-                value={newCharacter.personality}
-                onChange={(e) =>
-                  setNewCharacter({
-                    ...newCharacter,
-                    personality: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              Create Character
-            </Button>
-          </form>
-        </Card>
+        {editingCharacter ? (
+          <Card className="glass p-6">
+            <h2 className="text-xl font-semibold mb-4">Edit Character</h2>
+            <form onSubmit={handleEditCharacter} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editingCharacter.name}
+                  onChange={(e) =>
+                    setEditingCharacter({
+                      ...editingCharacter,
+                      name: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-anime">Anime</Label>
+                <Input
+                  id="edit-anime"
+                  value={editingCharacter.anime}
+                  onChange={(e) =>
+                    setEditingCharacter({
+                      ...editingCharacter,
+                      anime: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-image">Image URL</Label>
+                <Input
+                  id="edit-image"
+                  value={editingCharacter.image}
+                  onChange={(e) =>
+                    setEditingCharacter({
+                      ...editingCharacter,
+                      image: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editingCharacter.description}
+                  onChange={(e) =>
+                    setEditingCharacter({
+                      ...editingCharacter,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-personality">Personality</Label>
+                <Textarea
+                  id="edit-personality"
+                  value={editingCharacter.personality}
+                  onChange={(e) =>
+                    setEditingCharacter({
+                      ...editingCharacter,
+                      personality: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="flex space-x-2">
+                <Button type="submit" className="flex-1">
+                  Save Changes
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingCharacter(null)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Card>
+        ) : (
+          <Card className="glass p-6">
+            <h2 className="text-xl font-semibold mb-4">Add New Character</h2>
+            <form onSubmit={handleCreateCharacter} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={newCharacter.name}
+                  onChange={(e) =>
+                    setNewCharacter({ ...newCharacter, name: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="anime">Anime</Label>
+                <Input
+                  id="anime"
+                  value={newCharacter.anime}
+                  onChange={(e) =>
+                    setNewCharacter({ ...newCharacter, anime: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="image">Image URL</Label>
+                <Input
+                  id="image"
+                  value={newCharacter.image}
+                  onChange={(e) =>
+                    setNewCharacter({ ...newCharacter, image: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={newCharacter.description}
+                  onChange={(e) =>
+                    setNewCharacter({
+                      ...newCharacter,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="personality">Personality</Label>
+                <Textarea
+                  id="personality"
+                  value={newCharacter.personality}
+                  onChange={(e) =>
+                    setNewCharacter({
+                      ...newCharacter,
+                      personality: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Create Character
+              </Button>
+            </form>
+          </Card>
+        )}
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Existing Characters</h2>
-          {characters.map((character) => (
+          {charactersList.map((character) => (
             <Card key={character.id} className="glass p-4">
               <div className="flex items-start justify-between">
                 <div>
@@ -189,6 +295,7 @@ const Admin = () => {
                     variant="outline"
                     size="sm"
                     className="text-primary hover:text-primary"
+                    onClick={() => setEditingCharacter(character)}
                   >
                     Edit
                   </Button>
@@ -196,6 +303,7 @@ const Admin = () => {
                     variant="outline"
                     size="sm"
                     className="text-destructive hover:text-destructive"
+                    onClick={() => handleDeleteCharacter(character.id)}
                   >
                     Delete
                   </Button>
