@@ -57,7 +57,7 @@ const Chat = () => {
 
       const imageMessage: Message = {
         id: Date.now().toString(),
-        content: `Here's an anime image for you: ${data.url}`,
+        content: data.url,
         role: "assistant",
         timestamp: Date.now(),
       };
@@ -176,15 +176,12 @@ const Chat = () => {
               }`}
             >
               {message.content.includes('http') ? (
-                <div className="space-y-2">
-                  <p>{message.content.split('http')[0]}</p>
-                  <img 
-                    src={message.content.split('http')[1].trim()}
-                    alt="Anime character"
-                    className="rounded-lg max-w-full h-auto"
-                    loading="lazy"
-                  />
-                </div>
+                <img 
+                  src={message.content}
+                  alt="Anime character"
+                  className="rounded-lg max-w-full h-auto"
+                  loading="lazy"
+                />
               ) : (
                 <p>{message.content}</p>
               )}
