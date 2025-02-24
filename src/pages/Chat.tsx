@@ -1,11 +1,10 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { Message } from "@/types/character";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, Image } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -38,42 +37,35 @@ const Chat = () => {
     fetchCharacter();
   }, [id, navigate]);
 
-  if (!character) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Loading character...</h1>
-        </div>
-      </div>
-    );
-  }
-
   const handleAnimeImage = async () => {
     try {
       setIsLoading(true);
-      console.log('Requesting anime image...');
-      const { data, error } = await supabase.functions.invoke('get-anime-image');
-      
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: "send pic",
+        role: "user",
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, userMessage]);
 
-      if (!data?.url) {
-        console.error('No URL in response:', data);
+      const response = await fetch('https://api.waifu.pics/sfw/waifu');
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      const data = await response.json();
+      
+      if (!data.url) {
         throw new Error('No image URL received');
       }
 
-      console.log('Image URL received:', data.url);
-
       const imageMessage: Message = {
-        id: Date.now().toString(),
+        id: (Date.now() + 1).toString(),
         content: data.url,
         role: "assistant",
         timestamp: Date.now(),
       };
 
-      setMessages((prev) => [...prev, imageMessage]);
+      setMessages(prev => [...prev, imageMessage]);
     } catch (error) {
       console.error('Error getting image:', error);
       toast.error('Failed to get anime image');
@@ -144,6 +136,16 @@ const Chat = () => {
       setIsLoading(false);
     }
   };
+
+  if (!character) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">Loading character...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen">

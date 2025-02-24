@@ -91,45 +91,56 @@ const Admin = () => {
     e.preventDefault();
     if (!editingCharacter) return;
 
-    const { data, error } = await supabase
-      .from('characters')
-      .update({
-        name: editingCharacter.name,
-        anime: editingCharacter.anime,
-        image: editingCharacter.image,
-        description: editingCharacter.description,
-        personality: editingCharacter.personality
-      })
-      .eq('id', editingCharacter.id);
+    try {
+      const { error } = await supabase
+        .from('characters')
+        .update({
+          id: editingCharacter.id,
+          name: editingCharacter.name,
+          anime: editingCharacter.anime,
+          image: editingCharacter.image,
+          description: editingCharacter.description,
+          personality: editingCharacter.personality
+        })
+        .eq('id', editingCharacter.id);
 
-    if (error) {
-      toast.error('Failed to update character');
+      if (error) {
+        console.error('Update error:', error);
+        toast.error('Failed to update character');
+        return;
+      }
+
+      toast.success("Character updated successfully!");
+      setEditingCharacter(null);
+      fetchCharacters();
+    } catch (error) {
       console.error('Update error:', error);
-      return;
+      toast.error('Failed to update character');
     }
-
-    setEditingCharacter(null);
-    toast.success("Character updated successfully!");
-    fetchCharacters();
   };
 
   const handleDeleteCharacter = async (id: string) => {
-    const confirmed = window.confirm("Are you sure you want to delete this character?");
-    if (!confirmed) return;
+    try {
+      const confirmed = window.confirm("Are you sure you want to delete this character?");
+      if (!confirmed) return;
 
-    const { error } = await supabase
-      .from('characters')
-      .delete()
-      .eq('id', id);
+      const { error } = await supabase
+        .from('characters')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      toast.error('Failed to delete character');
+      if (error) {
+        console.error('Delete error:', error);
+        toast.error('Failed to delete character');
+        return;
+      }
+
+      toast.success("Character deleted successfully!");
+      fetchCharacters();
+    } catch (error) {
       console.error('Delete error:', error);
-      return;
+      toast.error('Failed to delete character');
     }
-
-    toast.success("Character deleted successfully!");
-    fetchCharacters();
   };
 
   return (
