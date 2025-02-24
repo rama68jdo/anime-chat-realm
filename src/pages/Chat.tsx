@@ -1,37 +1,86 @@
 
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { characters } from "@/data/characters";
+import { Character } from "@/types/character";
 import { Message } from "@/types/character";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Chat = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const character = characters.find((c) => c.id === id);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [character, setCharacter] = useState<Character | null>(null);
+
+  useState(() => {
+    async function fetchCharacter() {
+      if (!id) return;
+      const { data, error } = await supabase
+        .from('characters')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        toast.error('Character not found');
+        navigate('/');
+        return;
+      }
+
+      setCharacter(data);
+    }
+
+    fetchCharacter();
+  }, [id, navigate]);
 
   if (!character) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Character not found</h1>
-          <Button onClick={() => navigate("/")} variant="outline">
-            Return Home
-          </Button>
+          <h1 className="text-2xl font-bold">Loading character...</h1>
         </div>
       </div>
     );
   }
 
+  const handleAnimeImage = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('get-anime-image');
+      
+      if (error) throw error;
+
+      const imageMessage: Message = {
+        id: Date.now().toString(),
+        content: `Here's an anime image for you: ${data.url}`,
+        role: "assistant",
+        timestamp: Date.now(),
+      };
+
+      setMessages((prev) => [...prev, imageMessage]);
+    } catch (error) {
+      console.error('Error getting image:', error);
+      toast.error('Failed to get anime image');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+
+    // Handle special commands
+    if (input.toLowerCase() === 'send pic') {
+      handleAnimeImage();
+      setInput("");
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -126,7 +175,19 @@ const Chat = () => {
                   : "glass"
               }`}
             >
-              <p>{message.content}</p>
+              {message.content.includes('http') ? (
+                <div className="space-y-2">
+                  <p>{message.content.split('http')[0]}</p>
+                  <img 
+                    src={message.content.split('http')[1].trim()}
+                    alt="Anime character"
+                    className="rounded-lg max-w-full h-auto"
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <p>{message.content}</p>
+              )}
             </div>
           </div>
         ))}
@@ -137,7 +198,7 @@ const Chat = () => {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder="Type your message or 'send pic' for an anime image..."
             className="flex-1"
             disabled={isLoading}
           />
