@@ -91,13 +91,20 @@ const Admin = () => {
     e.preventDefault();
     if (!editingCharacter) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('characters')
-      .update(editingCharacter)
+      .update({
+        name: editingCharacter.name,
+        anime: editingCharacter.anime,
+        image: editingCharacter.image,
+        description: editingCharacter.description,
+        personality: editingCharacter.personality
+      })
       .eq('id', editingCharacter.id);
 
     if (error) {
       toast.error('Failed to update character');
+      console.error('Update error:', error);
       return;
     }
 
@@ -107,6 +114,9 @@ const Admin = () => {
   };
 
   const handleDeleteCharacter = async (id: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this character?");
+    if (!confirmed) return;
+
     const { error } = await supabase
       .from('characters')
       .delete()
@@ -114,6 +124,7 @@ const Admin = () => {
 
     if (error) {
       toast.error('Failed to delete character');
+      console.error('Delete error:', error);
       return;
     }
 

@@ -51,9 +51,20 @@ const Chat = () => {
   const handleAnimeImage = async () => {
     try {
       setIsLoading(true);
+      console.log('Requesting anime image...');
       const { data, error } = await supabase.functions.invoke('get-anime-image');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (!data?.url) {
+        console.error('No URL in response:', data);
+        throw new Error('No image URL received');
+      }
+
+      console.log('Image URL received:', data.url);
 
       const imageMessage: Message = {
         id: Date.now().toString(),
