@@ -1,6 +1,6 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { Message } from "@/types/character";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ const Chat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [character, setCharacter] = useState<Character | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     async function fetchCharacter() {
       if (!id) return;
       const { data, error } = await supabase
