@@ -1,19 +1,42 @@
 
-import { characters } from "@/data/characters";
 import { CharacterCard } from "@/components/CharacterCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [charactersList, setCharactersList] = useState<Character[]>(characters);
+  const [charactersList, setCharactersList] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Update local state when global characters change
   useEffect(() => {
-    setCharactersList(characters);
-  }, [characters]);
+    async function fetchCharacters() {
+      try {
+        const { data, error } = await supabase
+          .from('characters')
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching characters:', error);
+          toast.error('Failed to load characters');
+          return;
+        }
+
+        setCharactersList(data || []);
+      } catch (err) {
+        console.error('Error:', err);
+        toast.error('Failed to load characters');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCharacters();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -43,9 +66,19 @@ const Index = () => {
           </div>
           
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {charactersList.map((character) => (
-              <CharacterCard key={character.id} character={character} />
-            ))}
+            {loading ? (
+              <div className="col-span-full text-center py-12">
+                Loading characters...
+              </div>
+            ) : charactersList.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                No characters found.
+              </div>
+            ) : (
+              charactersList.map((character) => (
+                <CharacterCard key={character.id} character={character} />
+              ))
+            )}
           </div>
         </div>
       </div>
